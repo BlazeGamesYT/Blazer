@@ -1,0 +1,32 @@
+<!DOCTYPE html5>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./main.js" defer></script>
+    <title>Blazer</title>
+</head>
+<body>
+    <div class="fixed text-white text-sm ml-2 mt-1 noselect">
+        <div>
+            <span>Score: </span><strong><span id="scoreCount">0</span></strong>
+        </div>
+        <div>
+            <span>High Score: </span><strong><span id="highScoreCount">0</span></strong>
+        </div>
+        <div>
+            <span>Lifetime Kills: </span><strong><span id="killCount">0</span></strong>
+        </div>
+        <div class="mt-3"><span>Press <strong>B</strong> to buy faster bullet. Cost: 2500. Owned: </span><span id="bulletSpeedUpgrades">NONE</span></div>
+        <div id="debug" class="mt-6">
+            <div><span>Enemies: </span><span id="enemyCount">0</span></div>
+            <div><span>Bullets: </span><span id="bulletCount">0</span></div>
+            <div><span>EnemySpeedFactor: </span><span id="enemySpeedCount">1</span></div>
+        </div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+</body>
+</html>
