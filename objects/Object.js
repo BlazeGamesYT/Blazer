@@ -1,9 +1,9 @@
 class Object {
     constructor(x, y, radius, color) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-        this.color = color;
+        this.x = x || 0;
+        this.y = y || 0;
+        this.radius = radius || 15;
+        this.color = color || 'white';
     }
 
     draw(c) {

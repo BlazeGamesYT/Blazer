@@ -13,8 +13,4 @@ class Player extends Object {
         this.y = canvas.height / 2;
     }
 
-    update() {
-        super.update();
-    }
-    
 }

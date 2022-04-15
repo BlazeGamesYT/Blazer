@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <script src="./utils.js"></script>
     <script src="./objects/Object.js"></script>
     <script src="./objects/MovingObject.js"></script>
     <script src="./objects/Player.js"></script>
@@ -35,7 +40,7 @@
             <div><span>EnemySpeedFactor: </span><span id="enemySpeedFactorCount">1</span></div>
         </div>
     </div>
-    <div class="bottom-0 text-white text-sm ml-2 mb-1 noselect fixed">
+    <div class="bottom-0 text-white text-sm ml-2 mb-1 noselect fixed font-bold">
         <span id="versionTag">Loading...</span>
     </div>
     <canvas id="gameCanvas"></canvas>
