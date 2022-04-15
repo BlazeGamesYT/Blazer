@@ -1,8 +1,11 @@
 class Player extends Object {
     constructor(canvas) {
-        
-        this.radius = 15;
-        this.color = 'white';
+        super(
+            canvas.width / 2,
+            canvas.height / 2,
+            15,
+            'white'
+        )
     }
 
     centerPosition(canvas) {
@@ -13,8 +16,5 @@ class Player extends Object {
     update() {
         super.update();
     }
-
-    draw() {
-
-    }
+    
 }
