@@ -110,7 +110,7 @@ function update() {
 
     if (!document.hidden) {
 
-        if (score > 1000) {
+        if (score > 3000) {
             enemySpeedFactor += 0.001;
         }
 
@@ -197,5 +197,4 @@ console.log("loading page...");
 window.onload = function() {
     console.log("page loaded!");
     gameInit();
-    startEnemySpawning();
 }
