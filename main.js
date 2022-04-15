@@ -1,76 +1,21 @@
-const canvas = document.querySelector('#gameCanvas');
-const c = canvas.getContext('2d');
+// Constants
+const VERSION_NUMBER = "0.3.6 ALPHA";
 
-const scoreCount = document.querySelector('#scoreCount');
-const highScoreCount = document.querySelector('#highScoreCount');
-const bulletSpeedUpgradesPrompt = document.querySelector('#bulletSpeedUpgrades');
-
-const enemyCount = document.querySelector('#enemyCount');
-const bulletCount = document.querySelector('#bulletCount');
-const enemySpeedFactorCount = document.querySelector('#enemySpeedCount');
-const killCount = document.querySelector('#killCount');
-
-const debugPanel = document.querySelector('#debug');
-debugPanel.style.display = 'none';
-
-canvas.width = innerWidth;
-canvas.height = innerHeight;
-
-// CLASSES
-
-class Object {
-    constructor(x, y, radius, color) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-        this.color = color;
-    }
-
-    draw() {
-        c.beginPath();
-        c.fillStyle = this.color;
-        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-        c.fill();
-        c.closePath();
-    }
-}
-
-class MovingObject extends Object {
-    constructor(x, y, radius, color, velocity) {
-        super(x, y, radius, color);
-        this.velocity = velocity;
-    }
-
-    update() {
-        this.x += this.velocity.x;
-        this.y += this.velocity.y;
-    }
-}
-
-class Player extends Object {
-    constructor(x, y, radius, color) {
-        super(x, y, radius, color);
-    }
-}
-
-class Bullet extends MovingObject {
-    constructor(x, y, radius, color, velocity) {
-        super(x, y, radius, color, velocity);
-    }
-}
-
-class Enemy extends MovingObject {
-    constructor(x, y, radius, color) {
-        super(x, y, radius, color, calculateVelocity(x, y, player.x, player.y));
-    }
-
-    update() {
-        this.x += this.velocity.x * enemySpeedFactor;
-        this.y += this.velocity.y * enemySpeedFactor;
-    }
-}
-
-// UTIL
+let canvas;
+let c;
+let player;
+let bullets;
+let enemies;
+let score;
+let enemySpeedFactor;
+let bulletSpeedUpgrades;
+let bulletSize;
+let alive;
+let spamming;
+let lifetimeKills;
+let highScore;
+let dailyHighScore;
+let animationId;
 
 function calculateVelocity(originX, originY, targetX, targetY, speed) {
     const speedFactor = speed || 1;
@@ -85,8 +30,15 @@ function calculateVelocity(originX, originY, targetX, targetY, speed) {
 function setCookie(cname, cvalue, exdays) {
     const d = new Date();
     d.setTime(d.getTime() + (exdays*24*60*60*1000));
-    let expires = "expires="+ d.toUTCString();
-    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/" + ";SameSite=Strict";
+    let expires = "expires="+ d.toLocaleString('en-US', {timeZone: 'America/Los_Angeles'});
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/" + ";SameSite=Lax";
+}
+
+function setDailyCookie(cname, cvalue) {
+    const d = new Date();
+    d.setHours(24, 0, 0, 0);
+    let expires = "expires=" + d.toLocaleString('en-US', {timeZone: 'America/Los_Angeles'});
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/" + ";SameSite=Lax";
 }
 
 function getCookie(cname) {
@@ -105,36 +57,87 @@ function getCookie(cname) {
     return null;
 }
 
+function gameInit() {
+    console.log("loading game version " + VERSION_NUMBER);
+    versionTag.innerHTML = "v" + VERSION_NUMBER;
 
+    // Canvas Setup
+    canvas = document.querySelector('#gameCanvas');
+    c = canvas.getContext('2d');
 
-// GAME VARIABLES
-const player = new Player(canvas.width / 2, canvas.height / 2, 15, 'white');
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
 
-let bullets;
-let enemies;
-let score;
-let enemySpeedFactor;
-let bulletSpeedUpgrades;
-let bulletSize;
-let alive;
-let spamming = false;
+    // Global Vars
+    player = new Player(canvas.width / 2, canvas.height / 2, 15, 'white');
 
-if (!getCookie('lifetimeKills')) {
-    setCookie('lifetimeKills', '36505097', 365 * 10);
+    debugPanel.style.display = 'none';
+
+    if (!getCookie('lifetimeKills')) {
+        setCookie('lifetimeKills', '36505097', 365 * 10);
+    }
+    
+    if (!getCookie('highScore')) {
+        setCookie('highScore', '586740984', 365 * 10);
+    }
+    
+    if (!getCookie('dailyHighScore')) {
+        setDailyCookie('dailyHighScore', '8080927084'); // 3 before 6 after
+    }
+
+    spamming = false;
+    lifetimeKills = parseInt(getCookie('lifetimeKills').substring(5, getCookie('lifetimeKills').length - 2));
+    highScore = parseInt(getCookie('highScore').substring(5, getCookie('highScore').length - 3));
+    dailyHighScore = parseInt(getCookie('dailyHighScore').substring(3, getCookie('dailyHighScore').length - 6));
+
+    addEventListener('click', (event) => {
+
+        if (!document.hidden && !spamming) {
+            const bullet = new Bullet(canvas.width / 2, canvas.height / 2, bulletSize, 'white', null);
+    
+            bullet.velocity = calculateVelocity(player.x, player.y, event.clientX, event.clientY, bulletSpeedUpgrades / 1.5 + 5);
+    
+            bullets.push(bullet);
+        }
+    });
+    
+    addEventListener('resize', () => {
+        canvas.width = innerWidth;
+        canvas.height = innerHeight;
+    });
+    
+    addEventListener('keydown', (event) => {
+        if (!document.hidden) {
+    
+            if (!alive) {
+                init();
+                update();
+                return;
+            }
+    
+            if (event.code === 'Backquote') {
+                debugPanel.style.display === 'none' ? debugPanel.style.display = '' : debugPanel.style.display = 'none';
+            }
+    
+            if (event.key === 'b') {
+                if (score >= 2500) {
+                    if (bulletSpeedUpgrades < 5) {
+                        score -= 2500;
+                        bulletSpeedUpgrades += 1;
+                        bulletSpeedUpgradesPrompt.innerHTML = bulletSpeedUpgrades;
+                    } else {
+                        bulletSpeedUpgradesPrompt.innerHTML = 'MAX';
+                    }
+                    
+                }
+            }
+        }
+    });
 }
-
-if (!getCookie('highScore')) {
-    setCookie('highScore', '586740984', 365 * 10);
-}
-
-let lifetimeKills = parseInt(getCookie('lifetimeKills').substring(5, getCookie('lifetimeKills').length - 2));
-let highScore = parseInt(getCookie('highScore').substring(5, getCookie('highScore').length - 3));
-
-// GAME FUNCTION
-
-let animationId;
 
 function init() {
+    console.log("setting up game...");
+
     bullets = [];
     enemies = [];
     score = 0;
@@ -149,13 +152,6 @@ function init() {
 function update() {
 
     animationId = requestAnimationFrame(update);
-
-    if (bullets.length > 20) {
-        alert("bruh dont autoclick");
-        spamming = true;
-    }
-    
-    
     
 
     if (!document.hidden) {
@@ -164,12 +160,18 @@ function update() {
             enemySpeedFactor += 0.001;
         }
 
+        if (bullets.length > 30 && !spamming) {
+            alert("bruh stop spamming it ruins the game");
+            spamming = true;
+        }
+
         enemySpeedFactorCount.innerHTML = enemySpeedFactor;
         enemyCount.innerHTML = enemies.length;
         bulletCount.innerHTML = bullets.length;
         scoreCount.innerHTML = score;
         killCount.innerHTML = lifetimeKills;
         highScoreCount.innerHTML = highScore;
+        dailyHighScoreCount.innerHTML = dailyHighScore;
 
         setCookie('lifetimeKills', `${Math.round(Math.random() * (99995 - 10000) + 10000)}${lifetimeKills}${Math.round(Math.random() * (95 - 10) + 10)}`, 365 * 10);
 
@@ -178,13 +180,18 @@ function update() {
             setCookie('highScore', `${Math.round(Math.random() * (99995 - 10000) + 10000)}${highScore}${Math.round(Math.random() * (995 - 100) + 100)}`, 365 * 10);
         }
 
+        if (score > dailyHighScore) {
+            dailyHighScore = score;
+            setDailyCookie('dailyHighScore', `${Math.round(Math.random() * (995 - 100) + 100)}${highScore}${Math.round(Math.random() * (999995 - 100000) + 100000)}`, 0.069 / 2);
+        }
+
         c.fillStyle = 'rgba(0, 0, 0, 0.1)';
         c.fillRect(0, 0, canvas.width, canvas.height);
 
-        player.draw();
+        player.draw(c);
 
         bullets.forEach((bullet, bulletIndex) => {
-            bullet.draw();
+            bullet.draw(c);
             bullet.update();
 
             if (bullet.x > canvas.width + bullet.radius || bullet.x < 0 - bullet.radius || bullet.y > canvas.height + bullet.radius || bullet.y < 0 - bullet.radius) {
@@ -195,7 +202,7 @@ function update() {
         });
 
         enemies.forEach((enemy, enemyIndex) => {
-            enemy.draw();
+            enemy.draw(c);
             enemy.update();
 
             // Player collission
@@ -248,17 +255,6 @@ function startEnemySpawning() {
     setInterval(() => {
 
         if (!document.hidden) {
-
-            let x, y;
-            const radius = Math.random() * (30 - 3) + 3;
-    
-            if (Math.random() < 0.5) {
-                x = Math.random() < 0.5 ? 0 - radius : canvas.width + radius;
-                y = Math.random() * canvas.height;
-            } else {
-                x = Math.random() * canvas.width;
-                y = Math.random() < 0.5 ? 0 - radius : canvas.height + radius;
-            }
     
             const enemy = new Enemy(
                 x,
@@ -273,50 +269,11 @@ function startEnemySpawning() {
     }, 1000);
 }
 
-addEventListener('click', (event) => {
 
-    if (!document.hidden && !spamming) {
-        const bullet = new Bullet(canvas.width / 2, canvas.height / 2, bulletSize, 'white', null);
 
-        bullet.velocity = calculateVelocity(player.x, player.y, event.clientX, event.clientY, bulletSpeedUpgrades / 1.5 + 5);
-
-        bullets.push(bullet);
-    }
-});
-
-addEventListener('resize', () => {
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-});
-
-addEventListener('keydown', (event) => {
-    if (!document.hidden) {
-
-        if (!alive) {
-            init();
-            update();
-            return;
-        }
-
-        if (event.code === 'Backquote') {
-            debugPanel.style.display === 'none' ? debugPanel.style.display = '' : debugPanel.style.display = 'none';
-        }
-
-        if (event.key === 'b') {
-            if (score >= 2500) {
-                if (bulletSpeedUpgrades < 5) {
-                    score -= 2500;
-                    bulletSpeedUpgrades += 1;
-                    bulletSpeedUpgradesPrompt.innerHTML = bulletSpeedUpgrades;
-                } else {
-                    bulletSpeedUpgradesPrompt.innerHTML = 'MAX';
-                }
-                
-            }
-        }
-    }
-});
-
-init();
-update();
-startEnemySpawning();
+window.onload = function() {
+    gameInit();
+    init();
+    update();
+    startEnemySpawning();
+}

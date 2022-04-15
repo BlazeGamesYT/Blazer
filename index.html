@@ -5,8 +5,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="./impl.js" defer></script>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <script src="./Object.js"></script>
+    <script src="./MovingObject.js"></script>
+    <script src="./Player.js"></script>
+    <script src="./Bullet.js "></script>
+    <script src="./main.js"></script>
     <title>Blazer</title>
 </head>
 <body>
@@ -18,14 +22,20 @@
             <span>High Score: </span><strong><span id="highScoreCount">0</span></strong>
         </div>
         <div>
+            <span>High Score Of The Day: </span><strong><span id="dailyHighScoreCount">0</span></strong>
+        </div>
+        <div>
             <span>Lifetime Kills: </span><strong><span id="killCount">0</span></strong>
         </div>
-        <div class="mt-3"><span>Press <strong>B</strong> to buy faster bullet. Cost: 2500. Owned: </span><span id="bulletSpeedUpgrades">NONE</span></div>
-        <div id="debug" class="mt-6">
+        <div class="mt-3"><span>Press <strong>B</strong> to buy faster bullet. Cost: 2500. Owned: </span><span id="bulletSpeedUpgradesPrompt">NONE</span></div>
+        <div id="debugPanel" class="mt-6">
             <div><span>Enemies: </span><span id="enemyCount">0</span></div>
             <div><span>Bullets: </span><span id="bulletCount">0</span></div>
-            <div><span>EnemySpeedFactor: </span><span id="enemySpeedCount">1</span></div>
+            <div><span>EnemySpeedFactor: </span><span id="enemySpeedFactorCount">1</span></div>
         </div>
+    </div>
+    <div class="bottom-0 text-white text-sm ml-2 mb-1 noselect fixed">
+        <span id="versionTag">Loading...</span>
     </div>
     <canvas id="gameCanvas"></canvas>
 </body>
